@@ -9,3 +9,4 @@ d:\Users\PC\Documents\Visual Studio 2013\Projects\PVZCheatTool\PVZCheatTool\bin\
 d:\Users\PC\Documents\Visual Studio 2013\Projects\PVZCheatTool\PVZCheatTool\obj\x86\Release\PVZCheatTool.exe
 d:\Users\PC\Documents\Visual Studio 2013\Projects\PVZCheatTool\PVZCheatTool\obj\x86\Release\PVZCheatTool.pdb
 d:\Users\PC\Documents\Visual Studio 2013\Projects\PVZCheatTool\PVZCheatTool\bin\x86\Release\icon.ico
+d:\users\pc\documents\visual studio 2013\Projects\PVZCheatTool\PVZCheatTool\obj\x86\Release\PvzHakTool.csprojResolveAssemblyReference.cache

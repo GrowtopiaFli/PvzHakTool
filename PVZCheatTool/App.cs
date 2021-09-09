@@ -40,7 +40,7 @@ namespace PvzHakTool
 
     public class App
     {
-        public static string Watermark = @"PVZ HakTool V1.0";
+        public static string Watermark = @"PVZ HakTool V1.0.0b";
         public string folder = "";
         public string file = "";
         public string fname = "";
@@ -134,6 +134,42 @@ namespace PvzHakTool
                         { bytePermission, 0x74, 0xeb },
                         { bytePermission, 0x8b, 0x2b },
                         { bytePermission, 0x29, 0x89 }
+                    }
+                ),
+            new Hak(
+                "No Plant Cooldown (Cob Cannon, Magnets, Potato Mine, Chomper)",
+                false,
+                    new int[] {
+                        0x0046103b,
+                        0x00461e37,
+                        0x0045fe54,
+                        0x00461565
+                    },
+                    new Int64[,] {
+                        { bytePermission, 0x85, 0x80 },
+                        { bytePermission, 0x85, 0x80 },
+                        { bytePermission, 0x85, 0x80 },
+                        { bytePermission, 0x75, 0x70 }
+                    }
+                ),
+            new Hak(
+                "Immediate Plant Explosion (Cherry Bomb, Jalapeno)",
+                false,
+                    new int[] {
+                        0x00463408
+                    },
+                    new Int64[,] {
+                        { bytePermission, 0x75, 0x74 }
+                    }
+                ),
+            new Hak(
+                "Attack Superposition",
+                false,
+                    new int[] {
+                        0x00464a97
+                    },
+                    new Int64[,] {
+                        { bytePermission, 0x85, 0x84 }
                     }
                 )
         });
@@ -342,7 +378,7 @@ namespace PvzHakTool
                             }
                         }
                     }
-                    Thread.Sleep(50);
+                    // Thread.Sleep(50);
                 }
             }
             catch { };
