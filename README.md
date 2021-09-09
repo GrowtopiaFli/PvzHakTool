@@ -54,6 +54,11 @@ that causes the computer to crash then... please don't ;-;. \
 And that is basically what happened. \
 I tried making a messagebox when it hooked but it was hard and i figured it might be annoying. \
 I might add command line optons soon so you can make a shortcut and that it just doesn't get in the way with the prompts. \
+I was gonna use Sharprompt but as i said before, NuGet is stupid. \
+Here is Sharprompt: \
+https://github.com/shibayan/Sharprompt \
+And if you are wondering why the app needs administrator privileges, \
+it's because it needs to access some DLL libraries for the process memory modification of PVZ. \
 And yeah, Visual Studio 2013. \
 If you don't want to download the release then you can always check my code and compile. \
 I have nothing to hide. \
