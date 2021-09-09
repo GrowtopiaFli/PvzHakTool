@@ -2,7 +2,7 @@
 I Made This Tool In 4 Days Send Help ;-; \
 I Used Visual Studio 2013 To Make This Since My Computer Is A Potato. \
 **IMPORTANT: PVZ is not mine or associated with this tool, \
-PLEASE DO NOT HACK PEOPLE USING MY CODE!** \
+PLEASE DO NOT HACK PEOPLE USING MY CODE!**
 # You Should Not:
 * Keylog
 * Forkbomb
