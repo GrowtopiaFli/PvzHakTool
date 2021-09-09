@@ -76,3 +76,4 @@ There is no mac & linux support or something. \
 (I don't even know if there is a linux version of PVZ) \
 But that is basically it. \
 # Have Fun!
+Seriously, have fun.
