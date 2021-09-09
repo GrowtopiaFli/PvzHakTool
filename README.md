@@ -1,15 +1,16 @@
-# PvzHakTool
+# NOTE
 I Made This Tool In 4 Days Send Help ;-; \
 I Used Visual Studio 2013 To Make This Since My Computer Is A Potato. \
 **IMPORTANT: PVZ is not mine or associated with this tool, \
 PLEASE DO NOT HACK PEOPLE USING MY CODE!** \
-You Should Not:
+# You Should Not:
 * Keylog
 * Forkbomb
 * Corrupt Windows Memory
 * Delete Windows
 * Infect Files
 * Embed Malicious DLLs
+# Explanations
 'Keylog' - My app specifically does not contain a 'Keylogger' however, \
 c# doesn't support keylogging and that is why i bound it with c++ DLLs thanks to this guy's code: \
 https://github.com/crhenr/csharp-keylogger/blob/master/KeyLogger/KeyLogger/Program.cs \
