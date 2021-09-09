@@ -68,8 +68,8 @@ https://github.com/shibayan/Sharprompt \
 \
 If you are wondering why the app needs administrator privileges, \
 it's because it needs to access some DLL libraries for the process memory modification of PVZ. \
-Oh, and i almost forgot, this only supports the <mark>OLD VERSION</mark> of PVZ BUT but but, \
-I might add support for the <mark>GOTY EDITION</mark> \
+Oh, and i almost forgot, this only supports the **`OLD VERSION`** of PVZ BUT but but, \
+I might add support for the **`GOTY EDITION`** \
 \
 And yeah, Visual Studio 2013. \
 If you don't want to download the release then you can always check my code and compile. \
