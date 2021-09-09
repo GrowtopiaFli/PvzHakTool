@@ -77,5 +77,6 @@ I have nothing to hide. \
 There is no mac & linux support or something. \
 (I don't even know if there is a linux version of PVZ) \
 But that is basically it. \
+**Usage (Type Anywhere): tog(number of the cheat you want to toggle)**
 # Have Fun!
 Seriously, have fun.
