@@ -10,7 +10,7 @@ PLEASE DO NOT HACK PEOPLE USING MY CODE!** \
 * Delete Windows
 * Infect Files
 * Embed Malicious DLLs
-# Explanations
+# Explanations & Resources
 'Keylog' - My app specifically does not contain a 'Keylogger' however, \
 c# doesn't support keylogging and that is why i bound it with c++ DLLs thanks to this guy's code: \
 https://github.com/crhenr/csharp-keylogger/blob/master/KeyLogger/KeyLogger/Program.cs \
