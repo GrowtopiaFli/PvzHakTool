@@ -77,6 +77,7 @@ I have nothing to hide. \
 There is no mac & linux support or something. \
 (I don't even know if there is a linux version of PVZ) \
 But that is basically it. \
-**Usage (Type Anywhere): tog(number of the cheat you want to toggle)**
+**Usage (Type Anywhere): tog(number of the cheat you want to toggle)** \
+Big thanks to minecraft for the sound effect (literally just got the emerald block sfx in the note blocks): https://minecraft.net/
 # Have Fun!
 Seriously, have fun.
