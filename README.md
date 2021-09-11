@@ -75,9 +75,10 @@ And yeah, Visual Studio 2013. \
 If you don't want to download the release then you can always check my code and compile. \
 I have nothing to hide. \
 There is no mac & linux support or something. \
-(I don't even know if there is a linux version of PVZ) \
-But that is basically it. \
+(I don't even know if there is a linux version of PVZ)
 **Usage (Type Anywhere): tog(number of the cheat you want to toggle)** \
 Big thanks to minecraft for the sound effect (literally just got the emerald block note block sfx): https://minecraft.net/
 # Have Fun!
 Seriously, have fun.
+<h1>Updates</h1>
+<h2>Console Update</h2>
