@@ -81,7 +81,7 @@ Big thanks to minecraft for the sound effect (literally just got the emerald blo
 # Have Fun!
 Seriously, have fun.
 # Updates
-#2 1.0.0b Update
+## 1.0.0b Update
 More features
 * Added 'Attack Superposition'
 * Added 'No Plant Cooldown' (Cob Cannon, Magnets, Potato Mine, Chomper)
