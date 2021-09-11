@@ -81,4 +81,23 @@ Big thanks to minecraft for the sound effect (literally just got the emerald blo
 # Have Fun!
 Seriously, have fun.
 <h1>Updates</h1>
-<h2>Console Update</h2>
+<h2>1.0.0b Update</h2>
+More features
+* Added 'Attack Superposition'
+* Added 'No Plant Cooldown' (Cob Cannon, Magnets, Potato Mine, Chomper)
+* Added 'Immediate Plant Explosion' (Cherry Bomb, Jalapeno)
+<h2>1.0.0c Update - Console Update</h2>
+Made a Node.JS instance that is controlled by the c# app using TCP sockets. \
+I switched to 'iohook': \
+https://wilix-team.github.io/iohook \
+which means i had to remove 'GetAsyncKeyState' and the 'KeyToString' DLL. \
+Node.JS helped me out a lot. \
+Here are the resources that helped me: \
+https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener \
+https://stackoverflow.com/questions/570098/in-c-how-to-check-if-a-tcp-port-is-available \
+https://gist.github.com/tedmiston/5935757 \
+https://www.npmjs.com/package/node-hide-console-window \
+https://stackoverflow.com/questions/3571627/show-hide-the-console-window-of-a-c-sharp-console-application
+<h2>1.0.0d Update - ???</h2>
+I might add command line option support in this update and also the ability to hook into an already opened \
+Plants Vs Zombies instance so that it doesn't have to keep launching Plants Vs Zombies.
