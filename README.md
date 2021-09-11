@@ -80,13 +80,13 @@ There is no mac & linux support or something. \
 Big thanks to minecraft for the sound effect (literally just got the emerald block note block sfx): https://minecraft.net/
 # Have Fun!
 Seriously, have fun.
-<h1>Updates</h1>
-<h2>1.0.0b Update</h2>
+# Updates
+# 1.0.0b Update
 More features
 * Added 'Attack Superposition'
 * Added 'No Plant Cooldown' (Cob Cannon, Magnets, Potato Mine, Chomper)
 * Added 'Immediate Plant Explosion' (Cherry Bomb, Jalapeno)
-<h2>1.0.0c Update - Console Update</h2>
+# 1.0.0c Update - Console Update
 Made a Node.JS instance that is controlled by the c# app using TCP sockets. \
 I switched to 'iohook': \
 https://wilix-team.github.io/iohook \
