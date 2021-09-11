@@ -7,12 +7,18 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading;
 using System.Media;
+using System.Net;
+using System.Net.Sockets;
+using System.Net.NetworkInformation;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using PvzHakTool.Objects;
 
 namespace PvzHakTool
 {
     using gweb;
     using Misc;
-    using KeyToString;
+    // using KeyToString;
 
     public struct HakList
     {
@@ -40,14 +46,23 @@ namespace PvzHakTool
 
     public class App
     {
-        public static string Watermark = @"PVZ HakTool V1.0.0b";
+        // Thank You Tech CBT: https://www.youtube.com/watch?v=nwV3MS6pryY
+        public TcpListener server;
+        public TcpClient client;
+        public NetworkStream stream;
+        public bool updateClient = false;
+        public IPAddress localhostIP = IPAddress.Parse("127.0.0.1");
+        public int PORT = 0;
+        public static string Watermark = @"PVZ HakTool V1.0.0c";
         public string folder = "";
         public string file = "";
-        public string fname = "";
-        public Thread resetInputThread;
-        public Thread keyChecking;
+        public bool checkServer = false;
+        /*public Thread resetInputThread;
+        public Thread keyChecking;*/
         public Thread hakThread;
         public Thread gameCheckThread;
+        public Thread serverThread;
+        public Thread clientThread;
         public string Typed = "";
 
         public bool invalidCommand = false;
@@ -174,12 +189,61 @@ namespace PvzHakTool
                 )
         });
 
+        public Process console_process;
         public Process pvz_process;
+
+        public bool isPortAvailable(int port)
+        {
+            // Thank You: https://stackoverflow.com/questions/570098/in-c-how-to-check-if-a-tcp-port-is-available
+            List<IPEndPoint> availablePorts = new List<IPEndPoint>();
+            IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
+
+            IPEndPoint[] endPointsTcp = properties.GetActiveTcpListeners();
+            availablePorts.AddRange(endPointsTcp);
+
+            foreach (IPEndPoint endPoint in availablePorts)
+            {
+                if (endPoint.Port == port) return false;
+            }
+            return true;
+        }
 
         public void Start()
         {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(Watermark);
+            Console.WriteLine("Finding Free Port...");
+            do
+            {
+                Random _random = new Random();
+                PORT = _random.Next(0, 65535);
+            } while (!isPortAvailable(PORT));
+            Console.WriteLine("Using Port " + PORT);
+            console_process = null;
+            Thread nodeRunThread = new Thread(runNode);
+            nodeRunThread.Start();
+            Console.WriteLine("Starting Server...");
+            server = new TcpListener(localhostIP, PORT);
+            server.Start();
+            checkServer = true;
+            serverThread = new Thread(serverUpdate);
+            serverThread.Start();
+            Console.WriteLine("Switching To Node Window...");
+        }
+
+        /*public void StartBak()
+        {
+            PORT = 9000;
+            do
+            {
+                Random _random = new Random();
+                PORT = _random.Next(0, 65535);
+            } while (!isPortAvailable(PORT));
+            Console.WriteLine(PORT);
+            Console.WriteLine(isPortAvailable(PORT));
             string folderPath = Prompt.createInput("Enter Your PVZ Folder Path (Enter If Current Folder And '..' If It Is The Previous Folder)");
-            if (folderPath == "") folderPath = Directory.GetCurrentDirectory();
+            if (folderPath == "") folderPath = Directory.GetCurrentDirectory(); else folderPath = Path.GetFullPath(folderPath);
             bool dirExists = Directory.Exists(folderPath);
             if (dirExists)
             {
@@ -239,9 +303,9 @@ namespace PvzHakTool
                 Console.WriteLine("The File " + exePath + " Does Not Exist!");
                 promptExe(fPath);
             }
-        }
+        }*/
 
-        public void afterPromptExe(string fol, string fil)
+        /*public void afterPromptExe(string fol, string fil)
         {
             this.folder = fol;
             this.file = fil;
@@ -257,13 +321,6 @@ namespace PvzHakTool
             continueHak();
         }
 
-        public void runPVZ()
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo(Path.Combine(this.folder, this.file));
-            startInfo.WorkingDirectory = this.folder;
-            this.pvz_process = Process.Start(startInfo);
-        }
-
         public void continueHak()
         {
             Process[] processes = Process.GetProcesses();
@@ -274,16 +331,35 @@ namespace PvzHakTool
             }
             if (pvzExists)
             {
-                Console.WriteLine("Hooking app into PVZ process...");
-                initHak();
+                sendToClient = "Hooking app into PVZ process...";
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("PVZ Process Not Found!\nTerminating Program In 3 Seconds... (It Probably Did Not Launch Yet)");
-                System.Threading.Thread.Sleep(3000);
-                Environment.Exit(0);
+                sendToClient = "PVZ Process Not Found!\nTerminating Program In 3 Seconds... (It Probably Did Not Launch Yet)";
             }
+        }*/
+
+        public bool afterPromptExe(string fol, string fil)
+        {
+            this.folder = fol;
+            this.file = fil;
+            Thread pvzRunThread = new Thread(runPVZ);
+            pvzRunThread.Start();
+            System.Threading.Thread.Sleep(3000);
+            Process[] processes = Process.GetProcesses();
+            bool pvzExists = false;
+            for (int i = 0; i < processes.Length; i++)
+            {
+                if (this.file == processes[i].ProcessName) pvzExists = true;
+            }
+            return pvzExists;
+        }
+
+        public void runPVZ()
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo(Path.Combine(this.folder, this.file));
+            startInfo.WorkingDirectory = this.folder;
+            pvz_process = Process.Start(startInfo);
         }
 
         public bool checkPVZ()
@@ -300,28 +376,33 @@ namespace PvzHakTool
         {
             if (checkPVZ())
             {
-                Console.WriteLine("Successfully hooked app into PVZ!");
+                /*Console.WriteLine("Successfully hooked app into PVZ!");
                 Console.WriteLine("Loading Haks...");
-                Console.WriteLine("(Might Take 3 Seconds)");
-                System.Threading.Thread.Sleep(3000);
-                keyChecking = new Thread(startKeyCheck);
-                keyChecking.Start();
-                hakThread = new Thread(updateHaks);
-                hakThread.Start();
+                Console.WriteLine("(Might Take 3 Seconds)");*/
+                consoleLogClient("Successfully hooked app into PVZ!");
+                consoleLogClient("Loading Haks...");
+                consoleLogClient("(Wait For 3 Seconds)");
                 gameCheckThread = new Thread(checkGame);
                 gameCheckThread.Start();
-                updateConsole();
+                System.Threading.Thread.Sleep(3000);
+                /*keyChecking = new Thread(startKeyCheck);
+                keyChecking.Start();*/
+                hakThread = new Thread(updateHaks);
+                hakThread.Start();
+                messageToClient("SetHakList", JsonConvert.SerializeObject(hakList));
+                messageToClient("ConsoleUpdate", "1");
                 playSound("HakHooked.wav");
             }
             else
             {
-                Console.WriteLine("WOOPS! Your version of PVZ is unsupported\nThis could possibly because it is the GOTY edition or it is not PVZ at all!\nTerminating app in 3 seconds...");
-                System.Threading.Thread.Sleep(3000);
-                Environment.Exit(0);
+                messageToClient("ConsoleUpdate", "0");
+                consoleLogClient("WOOPS! Your version of PVZ is unsupported");
+                consoleLogClient("This could possibly because it is the GOTY edition or it is not PVZ at all!");
+                messageToClient("TerminateProcess", "Terminating app in 3 seconds...");
             }
         }
 
-        public void startKeyCheck()
+        /*public void startKeyCheck()
         {
             try
             {
@@ -443,7 +524,7 @@ namespace PvzHakTool
                 Console.ForegroundColor = ConsoleColor.White;
             }
             catch { };
-        }
+        }*/
 
         public void playSound(string sndPath)
         {
@@ -508,37 +589,472 @@ namespace PvzHakTool
 
         public void checkGame()
         {
-            while (true)
+            try
             {
-                if (pvz_process.HasExited)
+                while (true)
                 {
-                    if (resetInputThread != null)
+                    if (pvz_process != null && pvz_process.HasExited)
                     {
-                        resetInputThread.Interrupt();
-                        resetInputThread.Abort();
+                        /*if (resetInputThread != null)
+                        {
+                            resetInputThread.Interrupt();
+                            resetInputThread.Abort();
+                        }
+                        if (keyChecking != null)
+                        {
+                            keyChecking.Interrupt();
+                            keyChecking.Abort();
+                        }*/
+                        pvz_process.Refresh();
+                        if (hakThread != null)
+                        {
+                            hakThread.Interrupt();
+                            hakThread.Abort();
+                            hakThread = null;
+                        }
+                        // Console.ForegroundColor = ConsoleColor.White;
+                        messageToClient("ConsoleUpdate", "0");
+                        messageToClient("ConsoleClear", "1");
+                        consoleLogClient(Watermark);
+                        consoleLogClient("");
+                        consoleLogClient("Couldn't Find Game!");
+                        consoleLogClient("(Maybe It Closed?)");
+                        messageToClient("TerminateProcess", "Terminating In 3 Seconds...");
+                        if (gameCheckThread != null)
+                        {
+                            gameCheckThread.Interrupt();
+                            gameCheckThread.Abort();
+                            gameCheckThread = null;
+                        }
                     }
-                    if (keyChecking != null)
-                    {
-                        keyChecking.Interrupt();
-                        keyChecking.Abort();
-                    }
-                    if (hakThread != null)
-                    {
-                        hakThread.Interrupt();
-                        hakThread.Abort();
-                    }
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Clear();
-                    Console.WriteLine(Watermark);
-                    Console.WriteLine();
-                    Console.WriteLine("Couldn't Find Game!");
-                    Console.WriteLine("(Maybe It Closed?)");
-                    Console.WriteLine("Terminating In 5 Seconds...");
-                    System.Threading.Thread.Sleep(5000);
-                    Environment.Exit(0);
-                } 
-                System.Threading.Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(1000);
+                }
             }
+            catch { };
+        }
+
+        public void runNode()
+        {
+            ProcessStartInfo launchNode = new ProcessStartInfo(Path.GetFullPath("./PvzHakConsole/node16-win-x86.exe"));
+            launchNode.WorkingDirectory = Path.GetFullPath("PvzHakConsole");
+            launchNode.Arguments = "console.js -c " + PORT;
+            if (System.Environment.OSVersion.Version.Major >= 6)
+            {
+                launchNode.Verb = "runas";
+            }
+            console_process = Process.Start(launchNode);
+        }
+
+        public void serverUpdate()
+        {
+            try
+            {
+                while (checkServer)
+                {
+                    if (console_process != null && console_process.HasExited)
+                    {
+                        console_process.Refresh();
+                        if (server != null)
+                        {
+                            terminateProcess();
+                        }
+                        return;
+                    }
+                    try
+                    {
+                        /*TcpClient client = server.AcceptTcpClient();
+                        data = null;
+                        NetworkStream stream = client.GetStream();
+
+                        int i;
+
+                        while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        {
+                            data = Encoding.UTF8.GetString(bytes, 0, i);
+
+                            byte[] b1 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new messageObject("Initialize", Watermark)));
+                            messageObject m2 = new messageObject("PromptExe", "NULL");
+                            byte[] b3 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new messageObject("FolderInvalid", "1")));
+                            messageObject m4 = new messageObject("PromptConfPathFnd", "NULL");
+                            messageObject m5 = new messageObject("ConsoleLog", "");
+
+                            messageObject jsonData = JsonConvert.DeserializeObject<messageObject>(data);
+                            switch (jsonData.id)
+                            {
+                                case "GetWatermark":
+                                    if (int.Parse(jsonData.message) > 0) stream.Write(b1, 0, b1.Length);
+                                    break;
+                                case "FolderPath":
+                                    string folderPath = jsonData.message;
+                                    if (folderPath == "") folderPath = Directory.GetCurrentDirectory(); else folderPath = Path.GetFullPath(folderPath);
+                                    bool dirExists = Directory.Exists(folderPath);
+                                    if (dirExists)
+                                    {
+                                        folderPath = Path.GetFullPath(folderPath);
+                                        m2.message = folderPath;
+                                        byte[] b2 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(m2));
+                                        string[] m4Message = new string[2];
+                                        m4Message[0] = folderPath;
+                                        string[] isPVZ = { "Plants", "Zombies", "PVZ.", "PlVsZo", "PVZNormal", "Plants Vs Zombies", "PlantsVsZombies", "PlantsVsZombiesNormal", "Plants Vs Zombies Normal", "Zombies - Copy" };
+                                        string[] folderData = Directory.GetFiles(folderPath);
+                                        string[] potentiallyPVZ = new string[0];
+                                        for (int j = 0; j < folderData.Length; j++)
+                                        {
+                                            folderData[j] = Path.GetFileName(folderData[j]);
+                                            bool isPotentiallyPVZ = false;
+                                            for (int k = 0; k < isPVZ.Length; k++)
+                                            {
+                                                if (folderData[j].Contains(isPVZ[k]))
+                                                {
+                                                    isPotentiallyPVZ = true;
+                                                }
+                                            }
+                                            if (!folderData[j].EndsWith(".exe")) isPotentiallyPVZ = false;
+                                            if (isPotentiallyPVZ)
+                                            {
+                                                Array.Resize(ref potentiallyPVZ, potentiallyPVZ.Length + 1);
+                                                potentiallyPVZ[potentiallyPVZ.GetUpperBound(0)] = folderData[j];
+                                            }
+                                        }
+                                        Array.Sort(potentiallyPVZ, (x, y) => String.Compare(x, y));
+                                        if (potentiallyPVZ.Length > 0)
+                                        {
+                                            m4Message[1] = potentiallyPVZ[0];
+                                            m4.message = JsonConvert.SerializeObject(m4Message);
+                                            byte[] b4 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(m4));
+                                            stream.Write(b4, 0, b4.Length);
+                                        }
+                                        else stream.Write(b2, 0, b2.Length);
+                                    }
+                                    else
+                                    {
+                                        stream.Write(b3, 0, b3.Length);
+                                    }
+                                    break;
+                                case "TerminateProcess":
+                                    if (int.Parse(jsonData.message) > 0) terminateProcess();
+                                    break;
+                                case "ExePath":
+                                    string arrMessageStr = jsonData.message;
+                                    string[] arrMessage = new string[3];
+                                    string[] toCheck = JsonConvert.DeserializeObject<string[]>(arrMessageStr);
+                                    Console.WriteLine(arrMessageStr);
+                                    Console.WriteLine(toCheck[0]);
+                                    if (toCheck.Length == 3)
+                                    {
+                                        arrMessage = toCheck;
+
+                                        string fPath = arrMessage[0];
+                                        string exePath = arrMessage[1];
+                                        bool forceComplete = int.Parse(arrMessage[2]) > 0;
+
+                                        string combined = Path.Combine(fPath, exePath);
+                                        if (File.Exists(combined) || forceComplete)
+                                        {
+                                            bool pvzExists = afterPromptExe(fPath, exePath);
+                                            if (pvzExists) m5.message = "Hooking app into PVZ process..."; else m5.message = "PVZ Process Not Found!\nTerminating Program In 3 Seconds... (It Probably Did Not Launch Yet)";
+                                            if (!pvzExists) m5.id = "TerminateProcess";
+                                            byte[] b5 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(m5));
+                                            stream.Write(b5, 0, b5.Length);
+                                        }
+                                        else
+                                        {
+                                            m2.id = "PromptExeFail";
+                                            string[] m2Message = new string[2];
+                                            m2Message[0] = fPath;
+                                            m2Message[1] = exePath;
+                                            Console.WriteLine(exePath);
+                                            m2.message = JsonConvert.SerializeObject(m2Message);
+                                            byte[] b2 = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(m2));
+                                            stream.Write(b2, 0, b2.Length);
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine("WARNING: Node Console sent an unrecognized command!");
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                    break;
+                            }
+                        }
+
+                        client.Close();
+                        // Thank You: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener
+                        */
+                        if (client == null)
+                        {
+                            client = server.AcceptTcpClient();
+                            updateClient = true;
+                            clientThread = new Thread(clientUpdate);
+                            clientThread.Start();
+                        }
+                    }
+                    catch { }
+                    finally { server.Stop(); };
+                }
+            }
+            catch { };
+        }
+
+        public bool isJson(string inp)
+        {
+            try
+            {
+                JsonConvert.DeserializeObject(inp);
+                return true;
+            }
+            catch { return false; };
+        }
+
+        public void terminateProcess()
+        {
+            checkServer = false;
+            Console.Clear();
+            /*IntPtr hWND = Xtra.GetConsoleWindow();
+            Xtra.ShowWindow(hWND, Xtra.SW_SHOW);
+            Console.WriteLine("Node Console Cannot Be Found!");
+            Console.WriteLine("Terminating In 3 Seconds...");
+            if (hakThread != null)
+            {
+                hakThread.Interrupt();
+                hakThread.Abort();
+            }
+            if (gameCheckThread != null)
+            {
+                gameCheckThread.Interrupt();
+                gameCheckThread.Abort();
+            }
+            System.Threading.Thread.Sleep(3000);
+            Thread startThread = new Thread(Start);
+            startThread.Start();*/
+            if (hakThread != null)
+            {
+                hakThread.Interrupt();
+                hakThread.Abort();
+            }
+            if (gameCheckThread != null)
+            {
+                gameCheckThread.Interrupt();
+                gameCheckThread.Abort();
+            }
+            if (pvz_process != null && !pvz_process.HasExited)
+            {
+                pvz_process.CloseMainWindow();
+                pvz_process.Close();
+                pvz_process.Refresh();
+            }
+            if (server != null) server.Stop();
+            if (serverThread != null) serverThread.Abort();
+            Environment.Exit(0);
+        }
+
+        public void clientUpdate()
+        {
+            try
+            {
+                int dataBufferSize = 4096;
+                Byte[] bytes = new Byte[dataBufferSize];
+                String data = null;
+
+                if (client != null)
+                {
+                    client.ReceiveBufferSize = dataBufferSize;
+                    client.SendBufferSize = dataBufferSize;
+                    stream = client.GetStream();
+                }
+
+                while (updateClient)
+                {
+                    if (client != null)
+                    {
+                        int readLength = stream.Read(bytes, 0, bytes.Length);
+                        if (readLength > 0) data = Encoding.UTF8.GetString(bytes, 0, readLength);
+                        if (readLength > 0 && isJson(data))
+                        {
+                            string s1 = JsonConvert.SerializeObject(new messageObject("Initialize", Watermark));
+                            messageObject m2 = new messageObject("PromptExe", "NULL");
+                            string s3 = JsonConvert.SerializeObject(new messageObject("FolderInvalid", "1"));
+                            messageObject m4 = new messageObject("PromptConfPathFnd", "NULL");
+                            messageObject m5 = new messageObject("ConsoleLog", "");
+
+                            messageObject jsonData = JsonConvert.DeserializeObject<messageObject>(data);
+                            switch (jsonData.id)
+                            {
+                                case "GetWatermark":
+                                    if (int.Parse(jsonData.message) > 0)
+                                    {
+                                        sendToClient(s1);
+                                        IntPtr hWND = Xtra.GetConsoleWindow();
+                                        Xtra.ShowWindow(hWND, Xtra.SW_HIDE);
+                                    }
+                                    break;
+                                case "FolderPath":
+                                    try
+                                    {
+                                        string folderPath = jsonData.message;
+                                        if (folderPath == "") folderPath = Directory.GetCurrentDirectory(); else folderPath = Path.GetFullPath(folderPath);
+                                        bool dirExists = Directory.Exists(folderPath);
+                                        if (dirExists)
+                                        {
+                                            folderPath = Path.GetFullPath(folderPath);
+                                            m2.message = folderPath;
+                                            string s2 = JsonConvert.SerializeObject(m2);
+                                            string[] m4Message = new string[2];
+                                            m4Message[0] = folderPath;
+                                            string[] isPVZ = { "Plants", "Zombies", "PVZ.", "PlVsZo", "PVZNormal", "Plants Vs Zombies", "PlantsVsZombies", "PlantsVsZombiesNormal", "Plants Vs Zombies Normal", "Zombies - Copy" };
+                                            string[] folderData = Directory.GetFiles(folderPath);
+                                            string[] potentiallyPVZ = new string[0];
+                                            for (int j = 0; j < folderData.Length; j++)
+                                            {
+                                                folderData[j] = Path.GetFileName(folderData[j]);
+                                                bool isPotentiallyPVZ = false;
+                                                for (int k = 0; k < isPVZ.Length; k++)
+                                                {
+                                                    if (folderData[j].Contains(isPVZ[k]))
+                                                    {
+                                                        isPotentiallyPVZ = true;
+                                                    }
+                                                }
+                                                if (!folderData[j].EndsWith(".exe")) isPotentiallyPVZ = false;
+                                                if (isPotentiallyPVZ)
+                                                {
+                                                    Array.Resize(ref potentiallyPVZ, potentiallyPVZ.Length + 1);
+                                                    potentiallyPVZ[potentiallyPVZ.GetUpperBound(0)] = folderData[j];
+                                                }
+                                            }
+                                            Array.Sort(potentiallyPVZ, (x, y) => String.Compare(x, y));
+                                            if (potentiallyPVZ.Length > 0)
+                                            {
+                                                potentiallyPVZ[0] = Path.GetFileNameWithoutExtension(potentiallyPVZ[0]);
+                                                m4Message[1] = potentiallyPVZ[0];
+                                                m4.message = JsonConvert.SerializeObject(m4Message);
+                                                string s4 = JsonConvert.SerializeObject(m4);
+                                                sendToClient(s4);
+                                            }
+                                            else sendToClient(s2);
+                                        }
+                                        else
+                                        {
+                                            sendToClient(s3);
+                                        }
+                                    }
+                                    catch { sendToClient(s3); };
+                                    break;
+                                case "TerminateProcess":
+                                    if (int.Parse(jsonData.message) > 0) terminateProcess();
+                                    break;
+                                case "ExePath":
+                                    try
+                                    {
+                                        string arrMessageStr = jsonData.message;
+                                        if (isJson(arrMessageStr))
+                                        {
+                                            string[] arrMessage = new string[3];
+                                            string[] toCheck = JsonConvert.DeserializeObject<string[]>(arrMessageStr);
+                                            if (toCheck.Length == arrMessage.Length)
+                                            {
+                                                arrMessage = toCheck;
+
+                                                string fPath = arrMessage[0];
+                                                string exePath = arrMessage[1];
+                                                bool forceComplete = int.Parse(arrMessage[2]) > 0;
+
+                                                string combined = Path.Combine(fPath, exePath);
+                                                if (File.Exists(combined) || forceComplete)
+                                                {
+                                                    bool pvzExists = afterPromptExe(fPath, exePath);
+                                                    if (pvzExists) m5.message = "Hooking app into PVZ process..."; else m5.message = "PVZ Process Not Found!\nTerminating Program In 3 Seconds... (It Probably Did Not Launch Yet)";
+                                                    if (!pvzExists) m5.id = "TerminateProcess";
+                                                    string s5 = JsonConvert.SerializeObject(m5);
+                                                    sendToClient(s5);
+                                                    if (pvzExists) new Thread(initHak).Start();
+                                                }
+                                                else
+                                                {
+                                                    m2.id = "PromptExeFail";
+                                                    string[] m2Message = new string[2];
+                                                    m2Message[0] = fPath;
+                                                    m2Message[1] = exePath;
+                                                    m2.message = JsonConvert.SerializeObject(m2Message);
+                                                    string s2 = JsonConvert.SerializeObject(m2);
+                                                    sendToClient(s2);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch { terminateProcess(); };
+                                    break;
+                                /*case "HakList":
+                                    if (isJson(jsonData.message))
+                                    {
+                                        HakList parsedList = JsonConvert.DeserializeObject<HakList>(jsonData.message);
+                                        if (parsedList.Haks != null)
+                                        {
+                                            bool notNull = parsedList.Haks.Length > 0;
+                                            foreach (Hak hak in parsedList.Haks) if (!(hak.HakName != null && hak.Enabled != null && hak.Addresses != null && hak.Values != null)) notNull = false;
+                                            if (notNull)
+                                            {
+                                                Console.WriteLine(parsedList);
+                                            }
+                                        }
+                                    }
+                                    break;*/
+                                case "UpdateHaks":
+                                    try
+                                    {
+                                        string arrMessageStr = jsonData.message;
+                                        if (isJson(arrMessageStr))
+                                        {
+                                            bool[] arrMessage = new bool[hakList.Haks.Length];
+                                            bool[] toCheck = JsonConvert.DeserializeObject<bool[]>(arrMessageStr);
+                                            if (toCheck.Length == hakList.Haks.Length)
+                                            {
+                                                arrMessage = toCheck;
+
+                                                for (int i = 0; i < hakList.Haks.Length; i++)
+                                                {
+                                                    hakList.Haks[i].Enabled = arrMessage[i];
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch { };
+                                    break;
+                                case "PlayOnOff":
+                                    if (int.Parse(jsonData.message) > 0) playSound("HakOn.wav"); else playSound("HakOff.wav");
+                                    break;
+                                default:
+                                    Console.ForegroundColor = ConsoleColor.Yellow;
+                                    Console.WriteLine("WARNING: Node Console sent an unrecognized command!");
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch { };
+        }
+
+        public void sendToClient(string _data)
+        {
+            byte[] _dataBytes = Encoding.UTF8.GetBytes(_data);
+            if (client != null)
+            {
+                client.NoDelay = true;
+                stream.Write(_dataBytes, 0, _dataBytes.Length);
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
+        public void consoleLogClient(string log)
+        {
+            sendToClient(JsonConvert.SerializeObject(new messageObject("ConsoleLog", log)));
+        }
+
+        public void messageToClient(string id, string message)
+        {
+            sendToClient(JsonConvert.SerializeObject(new messageObject(id, message)));
         }
     }
 }

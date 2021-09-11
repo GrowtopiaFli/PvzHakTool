@@ -10,8 +10,6 @@ namespace PvzHakTool
     {
         static void Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(App.Watermark);
             App myApp = new App();
             myApp.Start();
         }
