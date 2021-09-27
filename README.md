@@ -81,6 +81,8 @@ Big thanks to minecraft for the sound effect (literally just got the emerald blo
 # Have Fun!
 Seriously, have fun.
 # Updates
+## 1.0.0 / 1.0.0a Update
+First Launch
 ## 1.0.0b Update
 More features
 * Added 'Attack Superposition'
