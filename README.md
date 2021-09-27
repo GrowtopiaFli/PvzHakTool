@@ -94,12 +94,12 @@ I switched to 'iohook': \
 https://wilix-team.github.io/iohook \
 which means i had to remove 'GetAsyncKeyState' and the 'KeyToString' DLL. \
 Node.JS helped me out a lot. \
-Here are the resources that helped me:
-https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener
-https://stackoverflow.com/questions/570098/in-c-how-to-check-if-a-tcp-port-is-available
-https://gist.github.com/tedmiston/5935757
-https://www.npmjs.com/package/node-hide-console-window
-https://stackoverflow.com/questions/3571627/show-hide-the-console-window-of-a-c-sharp-console-application
+Here are the resources that helped me: \
+https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener \
+https://stackoverflow.com/questions/570098/in-c-how-to-check-if-a-tcp-port-is-available \
+https://gist.github.com/tedmiston/5935757 \
+https://www.npmjs.com/package/node-hide-console-window \
+https://stackoverflow.com/questions/3571627/show-hide-the-console-window-of-a-c-sharp-console-application \
 I switched the console to a node.js console because the c# console is not that good.
 ## 1.0.0d Update - ???
 I might add command line option support in this update and also the ability to hook into an already opened \
